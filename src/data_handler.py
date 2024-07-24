@@ -378,3 +378,16 @@ def compute_age_range(local_students: pd.DataFrame, incoming_students: pd.DataFr
 
   age_range: int = int(max_age - min_age)
   return age_range
+
+def compute_date_range(local_students: pd.DataFrame, incoming_students: pd.DataFrame) -> int:
+  max_local_physical_availability_date = local_students['Availability'].max()
+  min_local_physical_availability_date = local_students['Availability'].min()
+
+  max_incoming_arrival_date = incoming_students['Arrival'].max()
+  min_incoming_arrival_date = incoming_students['Arrival'].min()
+
+  max_dates = max(max_local_physical_availability_date, max_incoming_arrival_date)
+  min_dates = min(min_local_physical_availability_date, min_incoming_arrival_date)
+
+  date_range: int = int((max_dates - min_dates).days)
+  return date_range
