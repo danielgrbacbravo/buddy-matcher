@@ -379,6 +379,19 @@ def compute_age_range(local_students: pd.DataFrame, incoming_students: pd.DataFr
   age_range: int = int(max_age - min_age)
   return age_range
 
+def compute_meeting_frequency_range(local_students: pd.DataFrame, incoming_students: pd.DataFrame) -> float:
+  max_local_meeting_frequency = float(local_students['MeetFrequency'].max())
+  max_incoming_meeting_frequency = float(incoming_students['MeetFrequency'].max())
+
+  min_local_meeting_frequency = float(local_students['MeetFrequency'].min())
+  min_incoming_meeting_frequency = float(incoming_students['MeetFrequency'].min())
+
+  max_meeting_frequency = max(max_local_meeting_frequency, max_incoming_meeting_frequency)
+  min_meeting_frequency = min(min_local_meeting_frequency, min_incoming_meeting_frequency)
+
+  meeting_frequency_range = max_meeting_frequency - min_meeting_frequency
+  return meeting_frequency_range
+
 def compute_date_range(local_students: pd.DataFrame, incoming_students: pd.DataFrame) -> int:
   max_local_physical_availability_date = local_students['Availability'].max()
   min_local_physical_availability_date = local_students['Availability'].min()
