@@ -379,6 +379,27 @@ def compute_age_range(local_students: pd.DataFrame, incoming_students: pd.DataFr
   age_range: int = int(max_age - min_age)
   return age_range
 
+
+def compute_gender_range(configs: configparser.ConfigParser) -> int:
+  local_gender_preference_penalty = int(configs.get('parameters', 'local_gender_preference_penalty'))
+  incoming_gender_preference_penalty = int(configs.get('parameters', 'incoming_gender_preference_penalty'))
+
+  gender_range: int = local_gender_preference_penalty + incoming_gender_preference_penalty
+  return gender_range
+
+
+
+
+def compute_hobby_range(configs: configparser.ConfigParser, hobbies: pd.DataFrame) -> float:
+  hobby_range: float = 0
+  for hobby in hobbies:
+      hobby_range += (3 * float(configs.get('hobbies', hobby)))
+  return hobby_range
+
+
+
+
+
 def compute_meeting_frequency_range(local_students: pd.DataFrame, incoming_students: pd.DataFrame) -> float:
   max_local_meeting_frequency = float(local_students['MeetFrequency'].max())
   max_incoming_meeting_frequency = float(incoming_students['MeetFrequency'].max())
