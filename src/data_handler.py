@@ -365,3 +365,16 @@ def get_base_necessity(incoming_students: pd.DataFrame) -> int:
     """Function to get the base necessity of incoming students"""
     base_necessity: int = int(incoming_students.count(axis=1).count())
     return base_necessity
+
+def compute_age_range(local_students: pd.DataFrame, incoming_students: pd.DataFrame) -> int:
+  max_local_age: pd.Series = local_students['Age'].max()
+  max_incoming_age: pd.Series = incoming_students['Age'].max()
+
+  min_local_age: pd.Series = local_students['Age'].min()
+  min_incoming_age: pd.Series = incoming_students['Age'].min()
+
+  max_age = max(max_local_age, max_incoming_age)
+  min_age = min(min_local_age, min_incoming_age)
+
+  age_range: int = int(max_age - min_age)
+  return age_range
