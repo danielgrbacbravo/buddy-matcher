@@ -1,0 +1,17 @@
+'Columns that match after renaming (local)', 'Column names that match after renaming (incoming - only necessary if they don't match up)'
+'Age',
+'Gender',
+'University',
+'Faculty',
+'Gaming',
+'Partying',
+'Sports',
+'Music',
+'BoardGames',
+'Arts',
+'Cooking',
+'Nature',
+'Availability', 'Arrival'
+'MeetFrequency',
+'Expectations',
+'GenderPreference',
