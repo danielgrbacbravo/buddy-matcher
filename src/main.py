@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # Importing external libraries
+import configparser
 from datetime import datetime
 from typing import Dict
 import pandas as pd
@@ -27,7 +28,17 @@ def main():
   # Load the data
   local_students: pd.DataFrame = pd.read_csv("input/local_students.csv")
   incoming_students: pd.DataFrame = pd.read_csv("input/incoming_students.csv")
+  try:
+        hobbies: pd.DataFrame = pd.read_csv("config/hobbies.csv", quotechar="'").iloc[:, 0].tolist()
+  except FileNotFoundError as e:
+          print(f"Error reading hobbies file: {e}\nEnsure there is a hobbies.csv file at the given path")
+          exit()
 
+  try:
+      faculty_distances: pd.DataFrame = pd.read_excel(r'config/faculty_distances.xlsx', index_col=0)
+  except FileNotFoundError as e:
+      print(f"Error reading faculty distances file: {e}\nEnsure there is a faculty_distances.xlsx file in the ")
+      exit()
 
   # clean and filter the data
   local_students, incoming_students = data_handler.clean_data(local_students, incoming_students)
@@ -48,7 +59,7 @@ def main():
 
 
   # convert categories to numerical values
-  local_students, incoming_students = data_handler.convert_categories_to_numerical(local_students, incoming_students,"config/hobbies.csv")
+  local_students, incoming_students = data_handler.convert_categories_to_numerical(local_students, incoming_students, hobbies)
 
   #adjust dates
   current_date = datetime.now()
@@ -61,6 +72,15 @@ def main():
 
   print(f"Base local capacity: {base_local_capacity}")
   print(f"Base incoming: {base_incoming_necessity}")
+
+
+  # compute the bounds for the different categories
+  config = configparser.ConfigParser()
+  config.read("config/config.ini")
+  normal_dict: Dict = data_handler.compute_normalization_values(
+    local_students, incoming_students, config, hobbies, faculty_distances)
+
+  print(normal_dict)
 
 if __name__ == '__main__':
   main()

@@ -304,9 +304,13 @@ def remap_columns(mapping_dict: Dict[str,str], Dataframe: pd.DataFrame) -> pd.Da
     Dataframe = Dataframe.rename(columns=mapping_dict)
     return Dataframe
 
+
+
+
+
 def convert_categories_to_numerical(local_students_df: pd.DataFrame,
                                     incoming_students_df: pd.DataFrame,
-                                    hobbies_file_path: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
+                                    hobbies: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Convert categorical hobby and frequency interests into numerical values
     for easier comparison.
@@ -320,12 +324,6 @@ def convert_categories_to_numerical(local_students_df: pd.DataFrame,
     Tuple[pd.DataFrame, pd.DataFrame]: A tuple containing the modified local_students_df
     and incoming_students_df DataFrames.
     """
-
-    try:
-        hobbies = pd.read_csv(hobbies_file_path, quotechar="'").iloc[:, 0].tolist()
-    except FileNotFoundError as e:
-        print(f"Error reading hobbies file: {e}\nEnsure there is a hobbies.csv file at the given path")
-        exit()
 
     hobby_options = ['Not interested', 'Interests me a little', 'Very interested']
     hobby_options_replacement = list(range(len(hobby_options)))
@@ -347,81 +345,149 @@ def convert_categories_to_numerical(local_students_df: pd.DataFrame,
     return local_students_df, incoming_students_df
 
 
+
+
+
 def adjust_dates(date: Union[str, datetime], current_date: datetime) -> datetime:
     parsed_date = pd.to_datetime(date).to_pydatetime()
     return parsed_date if parsed_date > current_date else current_date
+
+
+
+
+
 
 def adjust_dataframe_dates(dataframe: pd.DataFrame, columns: List[str], current_date: datetime) -> None:
     adjust_dates_vectorized = np.vectorize(adjust_dates)
     for column in columns:
         dataframe[column] = adjust_dates_vectorized(pd.to_datetime(dataframe[column]), current_date)
 
+
+
+
+
+
 def get_base_capacities(local_students: pd.DataFrame) -> int:
     """Function to get the base capacities of the local students and the necessity of incoming students"""
     base_local_capacity: int = int(local_students['Capacity'].sum())
     return base_local_capacity
+
+
+
+
+
 
 def get_base_necessity(incoming_students: pd.DataFrame) -> int:
     """Function to get the base necessity of incoming students"""
     base_necessity: int = int(incoming_students.count(axis=1).count())
     return base_necessity
 
+
+
+
+
+
 def compute_age_range(local_students: pd.DataFrame, incoming_students: pd.DataFrame) -> int:
-  max_local_age: pd.Series = local_students['Age'].max()
-  max_incoming_age: pd.Series = incoming_students['Age'].max()
+    max_local_age: float = float(local_students['Age'].max())
+    max_incoming_age: float  = float(incoming_students['Age'].max())
 
-  min_local_age: pd.Series = local_students['Age'].min()
-  min_incoming_age: pd.Series = incoming_students['Age'].min()
+    min_local_age: float  = float(local_students['Age'].min())
+    min_incoming_age: float = float(incoming_students['Age'].min())
 
-  max_age = max(max_local_age, max_incoming_age)
-  min_age = min(min_local_age, min_incoming_age)
+    max_age: Union[int, float] = max(max_local_age, max_incoming_age)
+    min_age: Union[int, float] = min(min_local_age, min_incoming_age)
 
-  age_range: int = int(max_age - min_age)
-  return age_range
+    age_range: int = int(max_age - min_age)
+    return age_range
 
 
 def compute_gender_range(configs: configparser.ConfigParser) -> int:
-  local_gender_preference_penalty = int(configs.get('parameters', 'local_gender_preference_penalty'))
-  incoming_gender_preference_penalty = int(configs.get('parameters', 'incoming_gender_preference_penalty'))
+    local_gender_preference_penalty: int = int(configs.get('parameters', 'local_gender_preference_penalty'))
+    incoming_gender_preference_penalty: int = int(configs.get('parameters', 'incoming_gender_preference_penalty'))
 
-  gender_range: int = local_gender_preference_penalty + incoming_gender_preference_penalty
-  return gender_range
-
-
+    gender_range: int = local_gender_preference_penalty + incoming_gender_preference_penalty
+    return gender_range
 
 
 def compute_hobby_range(configs: configparser.ConfigParser, hobbies: pd.DataFrame) -> float:
-  hobby_range: float = 0
-  for hobby in hobbies:
-      hobby_range += (3 * float(configs.get('hobbies', hobby)))
-  return hobby_range
-
-
-
+    hobby_range: float = 0.0
+    for hobby in hobbies:
+        hobby_range += (3 * float(configs.get('hobbies', hobby)))
+    return hobby_range
 
 
 def compute_meeting_frequency_range(local_students: pd.DataFrame, incoming_students: pd.DataFrame) -> float:
-  max_local_meeting_frequency = float(local_students['MeetFrequency'].max())
-  max_incoming_meeting_frequency = float(incoming_students['MeetFrequency'].max())
+    max_local_meeting_frequency: float = float(local_students['MeetFrequency'].max())
+    max_incoming_meeting_frequency: float = float(incoming_students['MeetFrequency'].max())
 
-  min_local_meeting_frequency = float(local_students['MeetFrequency'].min())
-  min_incoming_meeting_frequency = float(incoming_students['MeetFrequency'].min())
+    min_local_meeting_frequency: float = float(local_students['MeetFrequency'].min())
+    min_incoming_meeting_frequency: float = float(incoming_students['MeetFrequency'].min())
 
-  max_meeting_frequency = max(max_local_meeting_frequency, max_incoming_meeting_frequency)
-  min_meeting_frequency = min(min_local_meeting_frequency, min_incoming_meeting_frequency)
+    max_meeting_frequency: float = max(max_local_meeting_frequency, max_incoming_meeting_frequency)
+    min_meeting_frequency: float = min(min_local_meeting_frequency, min_incoming_meeting_frequency)
 
-  meeting_frequency_range = max_meeting_frequency - min_meeting_frequency
-  return meeting_frequency_range
+    meeting_frequency_range: float = max_meeting_frequency - min_meeting_frequency
+    return meeting_frequency_range
+
 
 def compute_date_range(local_students: pd.DataFrame, incoming_students: pd.DataFrame) -> int:
-  max_local_physical_availability_date = local_students['Availability'].max()
-  min_local_physical_availability_date = local_students['Availability'].min()
+    # Convert the 'Availability' and 'Arrival' columns to datetime if they aren't already
+    local_datetime = pd.to_datetime(local_students['Availability'], errors='coerce')
+    incoming_datetime = pd.to_datetime(incoming_students['Arrival'], errors='coerce')
 
-  max_incoming_arrival_date = incoming_students['Arrival'].max()
-  min_incoming_arrival_date = incoming_students['Arrival'].min()
+    max_local_availability_date: pd.Timestamp = local_datetime.max()
+    min_local_availability_date: pd.Timestamp = incoming_datetime.min()
 
-  max_dates = max(max_local_physical_availability_date, max_incoming_arrival_date)
-  min_dates = min(min_local_physical_availability_date, min_incoming_arrival_date)
+    max_incoming_arrival_date: pd.Timestamp =  local_datetime.max()
+    min_incoming_arrival_date: pd.Timestamp =  incoming_datetime.min()
 
-  date_range: int = int((max_dates - min_dates).days)
-  return date_range
+    max_dates: pd.Timestamp = max(max_local_availability_date, max_incoming_arrival_date)
+    min_dates: pd.Timestamp = min(min_local_availability_date, min_incoming_arrival_date)
+
+    date_range: int = (max_dates - min_dates).days
+    return date_range
+
+
+def compute_faculty_range(faculty_distances: pd.DataFrame) -> float:
+    return float(faculty_distances.max().max())
+
+
+def compute_normalization_values(
+    local_students: pd.DataFrame,
+    incoming_students: pd.DataFrame,
+    configs: configparser.ConfigParser,
+    hobbies: pd.DataFrame,
+    faculty_distances: pd.DataFrame
+) -> dict:
+    """Computes normalization values for various parameters based on the provided DataFrames.
+
+    This function calculates the following normalization values:
+    - Age range: The difference between the maximum and minimum ages of local and incoming students.
+    - Gender range: The penalty values for local and incoming gender preferences from the configuration.
+    - Faculty range: The maximum distance between faculties.
+    - Hobby range: The weighted sum of hobby preferences based on the configuration.
+    - Meeting frequency range: The difference between the maximum and minimum meeting frequencies of local and incoming students.
+    - Date range: The difference in days between the latest availability date and the earliest arrival date.
+
+    Args:
+        local_students_original (pd.DataFrame): The original DataFrame of local students.
+        incoming_students_original (pd.DataFrame): The original DataFrame of incoming students.
+        local_students_copy (pd.DataFrame): A copy of the DataFrame of local students after filtering.
+        incoming_students_copy (pd.DataFrame): A copy of the DataFrame of incoming students after filtering.
+        configs (configparser.ConfigParser): Configuration parser containing parameters for calculations.
+        hobbies (list[str]): List of hobbies to consider for hobby range computation.
+        faculty_distances (pd.DataFrame): DataFrame containing distances between faculties.
+
+    Returns:
+        dict: A dictionary containing computed normalization values for age range, gender range, faculty range,
+              hobby range, meeting frequency range, and date range.
+    """
+    normalization_values = {
+        'age_range': compute_age_range(local_students.copy(), incoming_students.copy()),
+        'gender_range': compute_gender_range(configs),
+        'faculty_range': compute_faculty_range(faculty_distances),
+        'hobby_range': compute_hobby_range(configs, hobbies),
+        'meeting_frequency_range': compute_meeting_frequency_range(local_students.copy(), incoming_students.copy()),
+        'date_range': compute_date_range(local_students.copy(), incoming_students.copy())
+    }
+    return normalization_values
