@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 # Importing external libraries
 import configparser
 from datetime import datetime
