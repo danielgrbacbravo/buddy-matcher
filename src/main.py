@@ -6,9 +6,12 @@ from datetime import datetime
 from typing import Dict
 import pandas as pd
 import os
+from pandas.core.arrays.datetimelike import Union
 
 # Importing internal libraries
 import data_handler
+import student_filter
+import normalization_calculator
 
 def main():
   output_dir: str = 'output/run_final_matching_algorithm_' + datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -27,7 +30,11 @@ def main():
 
   # Load the data
   local_students: pd.DataFrame = pd.read_csv("input/local_students.csv")
+  print("Local students loaded")
+  print(local_students.head())
   incoming_students: pd.DataFrame = pd.read_csv("input/incoming_students.csv")
+  print("Incoming students loaded")
+  print(incoming_students.head())
   try:
         hobbies: pd.DataFrame = pd.read_csv("config/hobbies.csv", quotechar="'").iloc[:, 0].tolist()
   except FileNotFoundError as e:
@@ -40,10 +47,14 @@ def main():
       print(f"Error reading faculty distances file: {e}\nEnsure there is a faculty_distances.xlsx file in the ")
       exit()
 
+
+  print ("Data loaded successfully")
+
   # clean and filter the data
   local_students, incoming_students = data_handler.clean_data(local_students, incoming_students)
   local_students, incoming_students = data_handler.rename_timestamps(local_students, incoming_students)
-  local_students, incoming_students, removed_local_students, removed_incoming_students = data_handler.apply_filters(local_students, incoming_students)
+
+  local_students, incoming_students, removed_local_students, removed_incoming_students = student_filter.apply_filters(local_students, incoming_students)
 
 
   # clean dataframes
@@ -56,7 +67,6 @@ def main():
 
   column_mapping = data_handler.read_column_mapping("config/incoming_students_column_renames.csv")
   incoming_students = data_handler.remap_columns(column_mapping,incoming_students)
-
 
   # convert categories to numerical values
   local_students, incoming_students = data_handler.convert_categories_to_numerical(local_students, incoming_students, hobbies)
@@ -77,7 +87,7 @@ def main():
   # compute the bounds for the different categories
   config = configparser.ConfigParser()
   config.read("config/config.ini")
-  normal_dict: Dict = data_handler.compute_normalization_values(
+  normal_dict: Dict[str, Union[float,int]] = normalization_calculator.compute_normalization_values(
     local_students, incoming_students, config, hobbies, faculty_distances)
 
   print(normal_dict)

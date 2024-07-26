@@ -18,9 +18,6 @@ def create_deny_list() -> pd.DataFrame:
     return deny_list
 
 
-
-
-
 def clean_data(local_students: pd.DataFrame, incoming_students: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Cleans the data for local and incoming students DataFrames.
@@ -37,6 +34,9 @@ def clean_data(local_students: pd.DataFrame, incoming_students: pd.DataFrame) ->
     Returns:
         Tuple[pd.DataFrame, pd.DataFrame]: A tuple containing the cleaned DataFrames for local and incoming students.
     """
+    local_students = local_students.copy()
+    incoming_students = incoming_students.copy()
+
 
     # Clean column names by replacing double single quotes with double quotes and stripping whitespace
     local_students.columns = local_students.columns.str.replace("''", '"').str.strip()
@@ -59,8 +59,6 @@ def clean_data(local_students: pd.DataFrame, incoming_students: pd.DataFrame) ->
 
 
 
-
-
 def rename_timestamps(local_students: pd.DataFrame, incoming_students: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Renames the first column of both local and incoming students DataFrames to 'Timestamp'.
@@ -72,126 +70,14 @@ def rename_timestamps(local_students: pd.DataFrame, incoming_students: pd.DataFr
     Returns:
         Tuple[pd.DataFrame, pd.DataFrame]: A tuple containing the DataFrames with renamed first columns.
     """
+    local_students = local_students.copy()
+    incoming_students = incoming_students.copy()
+
     first_column_name_local = str(local_students.columns[0])
     first_column_name_incoming = str(incoming_students.columns[0])
     local_students.rename(columns={first_column_name_local: "Timestamp"}, inplace=True)
     incoming_students.rename(columns={first_column_name_incoming: "Timestamp"}, inplace=True)
     return local_students, incoming_students
-
-
-
-
-
-def filter_incoming_student(row: pd.Series, current_date: Optional[datetime] = None) -> str | None:
-    """
-    Filters incoming students based on their arrival date and accessibility requirements.
-
-    Args:
-        row (pd.Series): A row of the incoming students DataFrame.
-        current_date (Optional[datetime]): The current date to compare with. Defaults to None, in which case the current date is used.
-
-    Returns:
-        str | None: A string indicating the reason for filtering out the student, or None if the student passes the filter.
-    """
-    date_arriving = pd.to_datetime(row['When will you arrive in Groningen (approximately)?'], format='%d/%m/%Y')
-
-    three_months_from_now = (current_date or datetime.now()) + timedelta(days=90)
-
-    if date_arriving < datetime.now():
-        row.loc['When will you arrive in Groningen (approximately)?'] = datetime.today()
-        date_arriving = datetime.today()
-
-    if not date_arriving <= three_months_from_now:
-        return 'Arriving too late'
-
-    try:
-        disability_status = row[
-            'Do you have any accessibility requirements you would like us to be aware of or need any sort of support?']
-
-        if disability_status == 'Yes (please fill in below)':
-            return 'Incoming student disability'
-    except KeyError:
-        pass
-
-    return None
-
-
-
-def filter_local_student(row: pd.Series, current_date: Optional[datetime] = None) -> str | None:
-    """
-    Filters local students based on their availability date.
-
-    Args:
-        row (pd.Series): A row of the local students DataFrame.
-        current_date (Optional[datetime]): The current date to compare with. Defaults to None, in which case the current date is used.
-
-    Returns:
-        str | None: A string indicating the reason for filtering out the student, or None if the student passes the filter.
-    """
-
-    date_available = pd.to_datetime(
-        row['From approximately which date are you available to physically meet your buddy match?'],
-        format='%d/%m/%Y')
-
-    three_months_from_now = (current_date or datetime.now()) + timedelta(days=90)
-
-    if date_available is pd.NaT:
-        return 'Date not entered correctly - reformat and read to input'
-
-    if date_available < datetime.now():
-        row.loc[
-            'From approximately which date are you available to physically meet your buddy match?'] = datetime.today()
-        date_available = datetime.today()
-
-    if not date_available <= three_months_from_now:
-        return 'Available too late'
-
-    return None
-
-
-
-def apply_filters(local_students: pd.DataFrame, incoming_students: pd.DataFrame, current_date: Optional[datetime] = None) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """
-    Applies filters to both local and incoming students DataFrames to separate out students based on certain criteria.
-
-    This function performs the following operations:
-    1. Applies the filter_local_student function to each row of the local_students DataFrame.
-    2. Applies the filter_incoming_student function to each row of the incoming_students DataFrame.
-    3. Separates out the rows that do not meet the criteria (filtered out) into separate DataFrames.
-    4. Drops the 'reason' column used for filtering from the remaining DataFrames.
-
-    Args:
-        local_students (pd.DataFrame): DataFrame containing local students' data.
-        incoming_students (pd.DataFrame): DataFrame containing incoming students' data.
-        current_date (Optional[datetime]): The current date to use for filtering. Defaults to None, in which case the current date is used.
-
-    Returns:
-        Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-        - Cleaned local students DataFrame.
-        - Cleaned incoming students DataFrame.
-        - DataFrame of removed local students with reasons.
-        - DataFrame of removed incoming students with reasons.
-    """
-
-    print('Filtering local and incoming students')
-
-    if current_date is None:
-        current_date = datetime.now()
-
-    local_students['reason'] = local_students.apply(lambda row: filter_local_student(row, current_date), axis=1)
-    incoming_students['reason'] = incoming_students.apply(lambda row: filter_incoming_student(row, current_date), axis=1)
-
-    removed_local_students: pd.DataFrame = local_students.loc[local_students['reason'].notna()]
-    removed_incoming_students: pd.DataFrame = incoming_students.loc[incoming_students['reason'].notna()]
-
-    local_students = local_students.loc[local_students['reason'].isna()]
-    incoming_students = incoming_students.loc[incoming_students['reason'].isna()]
-
-    local_students = local_students.drop(columns=['reason'])
-    incoming_students = incoming_students.drop(columns=['reason'])
-
-    return local_students, incoming_students, removed_local_students, removed_incoming_students
-
 
 
 def does_configuration_exist() -> bool:
@@ -220,6 +106,8 @@ def generate_cleaned_dataframes(
         incoming_students_irrelevant_columns (Optional[pd.DataFrame]): DataFrame containing irrelevant columns for incoming students. Defaults to None.
 
     """
+    local_students = local_students.copy()
+    incoming_students = incoming_students.copy()
 
     if does_configuration_exist() is False:
         raise FileNotFoundError('Configuration file not found. Please run the configuration script first.')
@@ -301,6 +189,8 @@ def remap_columns(mapping_dict: Dict[str,str], Dataframe: pd.DataFrame) -> pd.Da
         pd.DataFrame: DataFrame with remapped columns.
     """
 
+    Dataframe = Dataframe.copy()
+
     Dataframe = Dataframe.rename(columns=mapping_dict)
     return Dataframe
 
@@ -324,6 +214,9 @@ def convert_categories_to_numerical(local_students_df: pd.DataFrame,
     Tuple[pd.DataFrame, pd.DataFrame]: A tuple containing the modified local_students_df
     and incoming_students_df DataFrames.
     """
+
+    local_students_df = local_students_df.copy()
+    incoming_students_df = incoming_students_df.copy()
 
     hobby_options = ['Not interested', 'Interests me a little', 'Very interested']
     hobby_options_replacement = list(range(len(hobby_options)))
@@ -358,6 +251,7 @@ def adjust_dates(date: Union[str, datetime], current_date: datetime) -> datetime
 
 
 def adjust_dataframe_dates(dataframe: pd.DataFrame, columns: List[str], current_date: datetime) -> None:
+    dataframe = dataframe.copy()
     adjust_dates_vectorized = np.vectorize(adjust_dates)
     for column in columns:
         dataframe[column] = adjust_dates_vectorized(pd.to_datetime(dataframe[column]), current_date)
@@ -381,113 +275,3 @@ def get_base_necessity(incoming_students: pd.DataFrame) -> int:
     """Function to get the base necessity of incoming students"""
     base_necessity: int = int(incoming_students.count(axis=1).count())
     return base_necessity
-
-
-
-
-
-
-def compute_age_range(local_students: pd.DataFrame, incoming_students: pd.DataFrame) -> int:
-    max_local_age: float = float(local_students['Age'].max())
-    max_incoming_age: float  = float(incoming_students['Age'].max())
-
-    min_local_age: float  = float(local_students['Age'].min())
-    min_incoming_age: float = float(incoming_students['Age'].min())
-
-    max_age: Union[int, float] = max(max_local_age, max_incoming_age)
-    min_age: Union[int, float] = min(min_local_age, min_incoming_age)
-
-    age_range: int = int(max_age - min_age)
-    return age_range
-
-
-def compute_gender_range(configs: configparser.ConfigParser) -> int:
-    local_gender_preference_penalty: int = int(configs.get('parameters', 'local_gender_preference_penalty'))
-    incoming_gender_preference_penalty: int = int(configs.get('parameters', 'incoming_gender_preference_penalty'))
-
-    gender_range: int = local_gender_preference_penalty + incoming_gender_preference_penalty
-    return gender_range
-
-
-def compute_hobby_range(configs: configparser.ConfigParser, hobbies: pd.DataFrame) -> float:
-    hobby_range: float = 0.0
-    for hobby in hobbies:
-        hobby_range += (3 * float(configs.get('hobbies', hobby)))
-    return hobby_range
-
-
-def compute_meeting_frequency_range(local_students: pd.DataFrame, incoming_students: pd.DataFrame) -> float:
-    max_local_meeting_frequency: float = float(local_students['MeetFrequency'].max())
-    max_incoming_meeting_frequency: float = float(incoming_students['MeetFrequency'].max())
-
-    min_local_meeting_frequency: float = float(local_students['MeetFrequency'].min())
-    min_incoming_meeting_frequency: float = float(incoming_students['MeetFrequency'].min())
-
-    max_meeting_frequency: float = max(max_local_meeting_frequency, max_incoming_meeting_frequency)
-    min_meeting_frequency: float = min(min_local_meeting_frequency, min_incoming_meeting_frequency)
-
-    meeting_frequency_range: float = max_meeting_frequency - min_meeting_frequency
-    return meeting_frequency_range
-
-
-def compute_date_range(local_students: pd.DataFrame, incoming_students: pd.DataFrame) -> int:
-    # Convert the 'Availability' and 'Arrival' columns to datetime if they aren't already
-    local_datetime = pd.to_datetime(local_students['Availability'], errors='coerce')
-    incoming_datetime = pd.to_datetime(incoming_students['Arrival'], errors='coerce')
-
-    max_local_availability_date: pd.Timestamp = local_datetime.max()
-    min_local_availability_date: pd.Timestamp = incoming_datetime.min()
-
-    max_incoming_arrival_date: pd.Timestamp =  local_datetime.max()
-    min_incoming_arrival_date: pd.Timestamp =  incoming_datetime.min()
-
-    max_dates: pd.Timestamp = max(max_local_availability_date, max_incoming_arrival_date)
-    min_dates: pd.Timestamp = min(min_local_availability_date, min_incoming_arrival_date)
-
-    date_range: int = (max_dates - min_dates).days
-    return date_range
-
-
-def compute_faculty_range(faculty_distances: pd.DataFrame) -> float:
-    return float(faculty_distances.max().max())
-
-
-def compute_normalization_values(
-    local_students: pd.DataFrame,
-    incoming_students: pd.DataFrame,
-    configs: configparser.ConfigParser,
-    hobbies: pd.DataFrame,
-    faculty_distances: pd.DataFrame
-) -> dict:
-    """Computes normalization values for various parameters based on the provided DataFrames.
-
-    This function calculates the following normalization values:
-    - Age range: The difference between the maximum and minimum ages of local and incoming students.
-    - Gender range: The penalty values for local and incoming gender preferences from the configuration.
-    - Faculty range: The maximum distance between faculties.
-    - Hobby range: The weighted sum of hobby preferences based on the configuration.
-    - Meeting frequency range: The difference between the maximum and minimum meeting frequencies of local and incoming students.
-    - Date range: The difference in days between the latest availability date and the earliest arrival date.
-
-    Args:
-        local_students_original (pd.DataFrame): The original DataFrame of local students.
-        incoming_students_original (pd.DataFrame): The original DataFrame of incoming students.
-        local_students_copy (pd.DataFrame): A copy of the DataFrame of local students after filtering.
-        incoming_students_copy (pd.DataFrame): A copy of the DataFrame of incoming students after filtering.
-        configs (configparser.ConfigParser): Configuration parser containing parameters for calculations.
-        hobbies (list[str]): List of hobbies to consider for hobby range computation.
-        faculty_distances (pd.DataFrame): DataFrame containing distances between faculties.
-
-    Returns:
-        dict: A dictionary containing computed normalization values for age range, gender range, faculty range,
-              hobby range, meeting frequency range, and date range.
-    """
-    normalization_values = {
-        'age_range': compute_age_range(local_students.copy(), incoming_students.copy()),
-        'gender_range': compute_gender_range(configs),
-        'faculty_range': compute_faculty_range(faculty_distances),
-        'hobby_range': compute_hobby_range(configs, hobbies),
-        'meeting_frequency_range': compute_meeting_frequency_range(local_students.copy(), incoming_students.copy()),
-        'date_range': compute_date_range(local_students.copy(), incoming_students.copy())
-    }
-    return normalization_values
