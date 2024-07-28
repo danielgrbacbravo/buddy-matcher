@@ -38,6 +38,8 @@ def main():
   print(incoming_students.head())
   try:
         hobbies: pd.DataFrame = pd.read_csv("config/hobbies.csv", quotechar="'").iloc[:, 0].tolist()
+        print("Hobbies loaded")
+        print(hobbies)
   except FileNotFoundError as e:
           print(f"Error reading hobbies file: {e}\nEnsure there is a hobbies.csv file at the given path")
           exit()
