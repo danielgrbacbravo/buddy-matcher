@@ -276,6 +276,18 @@ def calculate_expectation_distance(
 
 
 
+def calculate_student_distance(
+  local_student: pd.Series,
+  incoming_student: pd.Series,
+  config: configparser.ConfigParser,
+  normal_dict: dict,
+  ) -> float:
+  return 0.0
+
+
+
+
+
 def _distance(self, local_student_index: int, incoming_student_index: int):
     """Function to calculate the distance between two students
     :param local_student_index: The index of the local student

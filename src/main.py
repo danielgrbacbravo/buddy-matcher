@@ -8,13 +8,23 @@ from typing import Dict
 import pandas as pd
 import os
 from pandas.core.arrays.datetimelike import Union
+import pyfiglet
+import numpy as np
+import logging, colorlog
 
 # Importing internal libraries
 import data_handler
 import student_filter
 import normalization_calculator
+import outlier_calculator
 
 def main():
+
+  # figlet name of the project
+  custom_fig = pyfiglet.Figlet(font='standard')
+  print(custom_fig.renderText('ESN Buddy Matcher'))
+
+
   output_dir: str = 'output/run_final_matching_algorithm_' + datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
   # Check if the input files exist
@@ -56,13 +66,10 @@ def main():
   # clean and filter the data
   local_students, incoming_students = data_handler.clean_data(local_students, incoming_students)
   local_students, incoming_students = data_handler.rename_timestamps(local_students, incoming_students)
-
   local_students, incoming_students, removed_local_students, removed_incoming_students = student_filter.apply_filters(local_students, incoming_students)
-
 
   # clean dataframes
   local_students, incoming_students = data_handler.generate_cleaned_dataframes(local_students, incoming_students, None,None,None)
-
 
   # Remap the columns in the dataframes for consistency
   column_mapping: Dict[str, str] = data_handler.read_column_mapping("config/local_students_column_renames.csv")
@@ -70,6 +77,26 @@ def main():
 
   column_mapping = data_handler.read_column_mapping("config/incoming_students_column_renames.csv")
   incoming_students = data_handler.remap_columns(column_mapping,incoming_students)
+
+  # look for outliers by age in the incoming students
+
+
+  PROCESSING = 5
+  logging.addLevelName(PROCESSING, 'PROCESSING')
+
+  formatter = colorlog.ColoredFormatter(log_colors={'PROCESSING': 'cyan'})
+  handler = logging.StreamHandler()
+  handler.setFormatter(formatter)
+
+  logger = logging.getLogger('example')
+  logger.addHandler(handler)
+  logger.setLevel('PROCESSING')
+
+  local_std: float = float(local_students['Age'].std())
+  incoming_outliers = outlier_calculator.calculate_outliers(logger,incoming_students, threshold=2.0, std= local_std)
+  str_outlier: list[str] = outlier_calculator.outliers_to_str(incoming_students, incoming_outliers)
+  print("Outliers calculated")
+  print (str_outlier)
 
   # convert categories to numerical values
   local_students, incoming_students = data_handler.convert_categories_to_numerical(local_students, incoming_students, hobbies)
