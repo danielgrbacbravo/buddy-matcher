@@ -13,7 +13,6 @@ from typing import Union
 
 def create_deny_list() -> pd.DataFrame:
     """Creates an empty DataFrame with columns 'Email Local' and 'Email Incoming'."""
-    print("constructing empty deny list")
     deny_list = pd.DataFrame({'Email Local': pd.Series(dtype='str'), 'Email Incoming': pd.Series(dtype='str')})
     return deny_list
 

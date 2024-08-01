@@ -5,7 +5,7 @@ import colorlog
 import logging
 
 
-def calculate_outliers(logger: logging.Logger, data: pd.DataFrame, threshold: float = 2.0, std: float = 1.0) -> pd.Series:
+def calculate_outliers(data: pd.DataFrame, threshold: float = 2.0, std: float = 1.0) -> pd.Series:
     """Calculates outliers in a series of data using the z-score method.
 
     Args:
@@ -16,19 +16,10 @@ def calculate_outliers(logger: logging.Logger, data: pd.DataFrame, threshold: fl
     Returns:
         pd.Series: Boolean series indicating whether each data point is an outlier.
     """
-
-
-    PROCESSING = 5
-    logger.setLevel('PROCESSING')
-    logger.log(PROCESSING, 'Calculating outliers')
-
-
+    colorlog.debug("calculating outliers")
     # Extract age data from the DataFrame
     age_data: pd.Series = pd.Series(data['Age'].values)
-
-
     mean_data = age_data.mean()
-    colorlog.warning(f"Mean: {mean_data}")
     z_scores = (age_data - mean_data) / std
     outliers = (z_scores < -threshold) | (z_scores > threshold)
 

@@ -96,8 +96,6 @@ def apply_filters(local_students: pd.DataFrame, incoming_students: pd.DataFrame,
     local_students = local_students.copy()
     incoming_students = incoming_students.copy()
 
-    print('Filtering local and incoming students')
-
     if current_date is None:
         current_date = datetime.now()
 
