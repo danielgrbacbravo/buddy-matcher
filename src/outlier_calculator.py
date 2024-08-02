@@ -4,7 +4,6 @@ from typing import Union, Optional
 import colorlog
 import logging
 
-
 def calculate_outliers(data: pd.DataFrame, threshold: float = 2.0, std: float = 1.0) -> pd.Series:
     """Calculates outliers in a series of data using the z-score method.
 
