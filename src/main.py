@@ -13,6 +13,7 @@ import numpy as np
 import colorlog as logging
 
 # Importing internal libraries
+import distance_calculator
 import formatter
 import student_filter
 import normalization_calculator
@@ -153,6 +154,8 @@ def main():
 
   for key, value in normal_dict.items():
     logging.info("value for %s: %s", key, value)
+
+  distance_calculator.caculate_student_distances(local_students, incoming_students,config, normal_dict, faculty_distances,hobbies)
 
 if __name__ == '__main__':
   main()

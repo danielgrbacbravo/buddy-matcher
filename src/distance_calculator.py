@@ -3,6 +3,7 @@ import pandas as pd
 import datetime
 import math
 import  numpy as np
+import colorlog as logging
 from munkres import Munkres, DISALLOWED
 
 def calculate_age_distance(
@@ -139,7 +140,7 @@ def calculate_faculty_distance(local_students: pd.Series, incoming_students: pd.
   incoming_faculty = incoming_students['Faculty']
 
   if local_faculty != incoming_faculty:
-      distance = float(faculty_distances[local_faculty].loc[incoming_faculty])
+    distance = float(faculty_distances.loc[incoming_faculty, local_faculty])
   return distance
 
 
@@ -281,65 +282,86 @@ def calculate_student_distance(
   incoming_student: pd.Series,
   config: configparser.ConfigParser,
   normal_dict: dict,
+  faculty_distances: pd.DataFrame,
+  hobbies: pd.DataFrame
   ) -> float:
-  return 0.0
+
+  distance: float = 0.0
+
+  # age distance between a local student and an incoming student
+  age_distance: float = calculate_age_distance(config, normal_dict['age_range'],local_student, incoming_student)
+  # distance between the gender preferences of local and incoming students.
+  gender_distance: float = calculate_gender_distance(config, normal_dict['gender_range'] , local_student, incoming_student)
+  # If the genders are different and the absolute age difference exceeds the desired age difference specified in the configuration
+  gender_age_distance: float = calculate_age_gender_distance(config, normal_dict['age_range'], local_student , incoming_student)
+  # the distance between the universities of two students.
+  university_distance: float = calculate_university_distance(local_student, incoming_student)
+  # distance between the faculties of a local student and an incoming student
+  faculty_distance: float = calculate_faculty_distance(local_student, incoming_student, faculty_distances)
+  # distance based on the personal interests (hobbies) of local and incoming students
+  interest_distance: float = calculate_personal_interests_distance(config,local_student, incoming_student, normal_dict['hobby_range'],hobbies)
+  # distance based on the availability dates of local and incoming students
+  availability_distance = calculate_availability_distance(local_student, incoming_student, normal_dict['date_range'])
+  # distance based on the text availability dates of local and incoming students
+  text_availability_distance = calculate_text_availability_distance(config, local_student, incoming_student)
+  # distance based on the meeting frequency preferences of local and incoming students
+  meeting_frequency_distance = calculate_meeting_frequency_distance(local_student, incoming_student, normal_dict['meeting_frequency_range'])
+  # distance based on the expectations of local and incoming students
+  expectation_distance = calculate_expectation_distance(local_student, incoming_student)
+
+  # Get all factors
+  age_factor = float(config.get('normalization', 'age_factor'))
+  gender_factor = float(config.get('normalization', 'gender_factor'))
+  age_gender_factor = float(config.get('normalization', 'age_gender_factor'))
+  university_factor = float(config.get('normalization', 'university_factor'))
+  faculty_factor = float(config.get('normalization', 'faculty_factor'))
+  interests_factor = float(config.get('normalization', 'interests_factor'))
+  availability_text_factor = float(config.get('normalization', 'availability_text_factor'))
+  availability_physical_factor = float(config.get('normalization', 'availability_physical_factor'))
+  meeting_frequency_factor = float(config.get('normalization', 'meeting_frequency_factor'))
+  expectation_factor = float(config.get('normalization', 'expectations_factor'))
+
+  # Calculate the total distance
+  distance += (age_factor * age_distance)
+  distance += (gender_factor * gender_distance)
+  distance += (age_gender_factor * gender_age_distance)
+  distance += (university_factor * university_distance)
+  distance += (faculty_factor * faculty_distance)
+  distance += (interests_factor * interest_distance)
+  distance += (availability_physical_factor * availability_distance)
+  distance += (availability_text_factor * text_availability_distance)
+  distance += (meeting_frequency_factor * meeting_frequency_distance)
+  distance += (expectation_factor * expectation_distance)
+
+  return distance
 
 
 
+def caculate_student_distances(
+  local_students: pd.DataFrame,
+  incoming_students: pd.DataFrame,
+  config: configparser.ConfigParser,
+  normal_dict: dict,
+  faculty_distances: pd.DataFrame ,
+  hobbies: pd.DataFrame) -> pd.DataFrame:
+  distance: float = 0.0
+  # Create a DataFrame to store the distances between all local and incoming students
+  distances = pd.DataFrame(index=range(len(local_students)), columns=range(len(incoming_students)))
+
+  for local_student_index in range(len(local_students)):
+
+    local_student_name = local_students.iloc[local_student_index]['FirstName']
+    logging.info(f'Calculating distances for {local_student_name} between incoming students')
+
+    for incoming_student_index in range(len(incoming_students)):
+      distance = calculate_student_distance(
+        local_students.iloc[local_student_index],
+        incoming_students.iloc[incoming_student_index],
+        config,
+        normal_dict,
+        faculty_distances,
+        hobbies)
+      distances.loc[local_student_index, incoming_student_index] = distance
 
 
-def _distance(self, local_student_index: int, incoming_student_index: int):
-    """Function to calculate the distance between two students
-    :param local_student_index: The index of the local student
-    :param incoming_student_index: The index of the incoming student
-    :return: The distance between the two students
-    """
-    distance = 0
-
-    # Obtain the two students
-    local_student = self.local_students_copy.iloc[local_student_index]
-    incoming_student = self.incoming_students_copy.iloc[incoming_student_index]
-
-    self.deny_list.columns = self.deny_list.columns.str.strip().str.replace("''", '').str.replace("'", '')
-
-    # Make sure these students aren't in the deny list
-    if ((self.deny_list['Email Local'] == local_student['Email']) & (
-            self.deny_list['Email Incoming'] == incoming_student['Email'])).any():
-        return DISALLOWED
-
-    if max((local_student['Availability'] - incoming_student['Arrival']).days, 0) > float(
-            self.configs.get('parameters', 'maximum_unavailable_duration')):
-        distance += 100
-
-    # Get all factors
-    age_factor = float(self.configs.get('normalization', 'age_factor'))
-    gender_factor = float(self.configs.get('normalization', 'gender_factor'))
-    age_gender_factor = float(self.configs.get('normalization', 'age_gender_factor'))
-    university_factor = float(self.configs.get('normalization', 'university_factor'))
-    faculty_factor = float(self.configs.get('normalization', 'faculty_factor'))
-    interests_factor = float(self.configs.get('normalization', 'interests_factor'))
-    availability_text_factor = float(self.configs.get('normalization', 'availability_text_factor'))
-    availability_physical_factor = float(self.configs.get('normalization', 'availability_physical_factor'))
-    meeting_frequency_factor = float(self.configs.get('normalization', 'meeting_frequency_factor'))
-    expectation_factor = float(self.configs.get('normalization', 'expectations_factor'))
-
-    # Multiple Factors by their respective distances
-    distance += (age_factor * self._age_distance(local_student, incoming_student))
-    distance += (gender_factor * self._gender_distance(local_student, incoming_student))
-    distance += (age_gender_factor * self._age_gender_distance(local_student, incoming_student))
-    distance += (university_factor * self._university_distance(local_student, incoming_student))
-    distance += (faculty_factor * self._faculty_distance(local_student, incoming_student))
-    distance += (interests_factor * self._interests_distance(local_student, incoming_student))
-
-    distance += (availability_physical_factor * self._availability_physical_distance(local_student, incoming_student))
-
-    try:
-        distance += (availability_text_factor * self._availability_text_distance(local_student, incoming_student))
-    except TypeError:
-        # Catch the possibility that this is a DISSALOWED match because of availability to text
-        return DISALLOWED
-
-    distance += (meeting_frequency_factor * self._meeting_frequency_distance(local_student, incoming_student))
-    distance += (expectation_factor * self._expectation_distance(local_student, incoming_student))
-
-    return distance
+  return distances
