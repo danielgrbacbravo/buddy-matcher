@@ -13,7 +13,7 @@ import numpy as np
 import colorlog as logging
 
 # Importing internal libraries
-import data_handler
+import formatter
 import student_filter
 import normalization_calculator
 import outlier_calculator
@@ -23,7 +23,7 @@ def main():
 
   logging.basicConfig(level=logging.INFO)
 
-  # figlet name of the project
+  # figlet name
   custom_fig = pyfiglet.Figlet(font='standard')
   print(custom_fig.renderText('ESN Buddy Matcher'))
 
@@ -68,11 +68,11 @@ def main():
   logging.info("Columns cleaned")
 
     # Remap the columns in the dataframes for consistency
-  column_mapping: Dict[str, str] = data_handler.read_column_mapping("config/local_students_column_renames.csv")
-  local_students = data_handler.remap_columns(column_mapping,local_students)
+  column_mapping: Dict[str, str] = formatter.read_column_mapping("config/local_students_column_renames.csv")
+  local_students = formatter.remap_columns(column_mapping,local_students)
 
-  column_mapping = data_handler.read_column_mapping("config/incoming_students_column_renames.csv")
-  incoming_students = data_handler.remap_columns(column_mapping,incoming_students)
+  column_mapping = formatter.read_column_mapping("config/incoming_students_column_renames.csv")
+  incoming_students = formatter.remap_columns(column_mapping,incoming_students)
   logging.info("Columns remapped successfully")
 
   # Convert all date columns to datetime objects
@@ -86,9 +86,13 @@ def main():
   local_students, incoming_students, removed_local_students, removed_incoming_students = student_filter.apply_filters(local_students, incoming_students)
   logging.info("Filters applied")
 
-  # clean dataframes
-  local_students, incoming_students = data_handler.generate_cleaned_dataframes(local_students, incoming_students, None,None,None)
-  logging.info("Dataframes cleaned")
+
+  # Strip spaces from column names
+  local_students.columns = local_students.columns.str.strip()
+  incoming_students.columns = incoming_students.columns.str.strip()
+
+  local_students, incoming_students = formatter.drop_irrelevant_columns(local_students, incoming_students)
+  logging.info("Irrelevant columns dropped")
 
 
   threshold: float = 2.0
@@ -116,16 +120,16 @@ def main():
 
 
     #print in red colo  # convert categories to numerical values
-  local_students, incoming_students = data_handler.convert_categories_to_numerical(local_students, incoming_students, hobbies)
+  local_students, incoming_students = formatter.convert_categories_to_numerical(local_students, incoming_students, hobbies)
 
   #adjust dates
   current_date = datetime.now()
-  data_handler.adjust_dataframe_dates(local_students, ['Availability', 'AvailabilityText'], current_date)
-  data_handler.adjust_dataframe_dates(incoming_students, ['Arrival'], current_date)
+  formatter.adjust_dataframe_dates(local_students, ['Availability', 'AvailabilityText'], current_date)
+  formatter.adjust_dataframe_dates(incoming_students, ['Arrival'], current_date)
 
   # calulate capacities of the local students and number of  incoming students
-  base_local_capacity: int  = data_handler.get_base_capacities(local_students)
-  base_incoming_necessity: int = data_handler.get_base_necessity(incoming_students) + 5
+  base_local_capacity: int  = formatter.get_base_capacities(local_students)
+  base_incoming_necessity: int = formatter.get_base_necessity(incoming_students)
 
 
   logging.info("Base capacities and necessities calculated")
@@ -144,8 +148,11 @@ def main():
   config.read("config/config.ini")
   normal_dict: Dict[str, Union[float,int]] = normalization_calculator.compute_normalization_values(
     local_students, incoming_students, config, hobbies, faculty_distances)
+  logging.info("Normalization values computed")
 
-  print(normal_dict)
+
+  for key, value in normal_dict.items():
+    logging.info("value for %s: %s", key, value)
 
 if __name__ == '__main__':
   main()
