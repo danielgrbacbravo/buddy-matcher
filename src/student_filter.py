@@ -13,12 +13,12 @@ def filter_incoming_student(row: pd.Series, current_date: Optional[datetime] = N
     Returns:
         str | None: A string indicating the reason for filtering out the student, or None if the student passes the filter.
     """
-    date_arriving = pd.to_datetime(row['When will you arrive in Groningen (approximately)?'], format='%d/%m/%Y')
+    date_arriving = pd.to_datetime(row['Arrival'], format='%d/%m/%Y')
 
     three_months_from_now = (current_date or datetime.now()) + timedelta(days=90)
 
     if date_arriving < datetime.now():
-        row.loc['When will you arrive in Groningen (approximately)?'] = datetime.today()
+        row.loc['Arrival'] = datetime.today()
         date_arriving = datetime.today()
 
     if not date_arriving <= three_months_from_now:
@@ -50,7 +50,7 @@ def filter_local_student(row: pd.Series, current_date: Optional[datetime] = None
     """
 
     date_available = pd.to_datetime(
-        row['From approximately which date are you available to physically meet your buddy match?'],
+        row['Availability'],
         format='%d/%m/%Y')
 
     three_months_from_now = (current_date or datetime.now()) + timedelta(days=90)
@@ -60,7 +60,7 @@ def filter_local_student(row: pd.Series, current_date: Optional[datetime] = None
 
     if date_available < datetime.now():
         row.loc[
-            'From approximately which date are you available to physically meet your buddy match?'] = datetime.today()
+            'Availability'] = datetime.today()
         date_available = datetime.today()
 
     if not date_available <= three_months_from_now:

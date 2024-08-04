@@ -17,6 +17,7 @@ import data_handler
 import student_filter
 import normalization_calculator
 import outlier_calculator
+import formatter
 
 def main():
 
@@ -35,11 +36,6 @@ def main():
 
   if not os.path.exists("input/incoming_students.csv"):
       raise FileNotFoundError(f"Incoming students file not found in the input folder.")
-
-  if not os.path.exists("input/deny_list.csv"):
-    deny_list = data_handler.create_deny_list()
-  else:
-    deny_list = pd.read_csv("input/deny_list.csv")
 
   # Load the data
   local_students: pd.DataFrame = pd.read_csv("input/local_students.csv")
@@ -65,11 +61,28 @@ def main():
 
   logging.info("Faculty distances loaded")
 
-  # clean and filter the data
-  local_students, incoming_students = data_handler.clean_data(local_students, incoming_students)
-  logging.info("Data cleaned")
-  local_students, incoming_students = data_handler.rename_timestamps(local_students, incoming_students)
+
+  # Clean column names by replacing double single quotes with double quotes and stripping whitespace
+  local_students.columns = local_students.columns.str.replace("''", '"').str.strip()
+  incoming_students.columns = incoming_students.columns.str.replace("''", '"').str.strip()
+  logging.info("Columns cleaned")
+
+    # Remap the columns in the dataframes for consistency
+  column_mapping: Dict[str, str] = data_handler.read_column_mapping("config/local_students_column_renames.csv")
+  local_students = data_handler.remap_columns(column_mapping,local_students)
+
+  column_mapping = data_handler.read_column_mapping("config/incoming_students_column_renames.csv")
+  incoming_students = data_handler.remap_columns(column_mapping,incoming_students)
+  logging.info("Columns remapped successfully")
+
+  # Convert all date columns to datetime objects
+  local_students, incoming_students = formatter.convert_all_dates_to_datetime(local_students, incoming_students)
+
+  logging.info("Dates converted to datetime objects successfully")
+
+  local_students, incoming_students = formatter.rename_timestamps(local_students, incoming_students)
   logging.info("Timestamps renamed")
+
   local_students, incoming_students, removed_local_students, removed_incoming_students = student_filter.apply_filters(local_students, incoming_students)
   logging.info("Filters applied")
 
@@ -77,26 +90,32 @@ def main():
   local_students, incoming_students = data_handler.generate_cleaned_dataframes(local_students, incoming_students, None,None,None)
   logging.info("Dataframes cleaned")
 
-  # Remap the columns in the dataframes for consistency
-  column_mapping: Dict[str, str] = data_handler.read_column_mapping("config/local_students_column_renames.csv")
-  local_students = data_handler.remap_columns(column_mapping,local_students)
 
-  column_mapping = data_handler.read_column_mapping("config/incoming_students_column_renames.csv")
-  incoming_students = data_handler.remap_columns(column_mapping,incoming_students)
-  logging.info("Columns remapped")
-
+  threshold: float = 2.0
 
   # look for outliers by age in the incoming students
-
   local_std: float = float(local_students['Age'].std())
-  incoming_outliers = outlier_calculator.calculate_outliers(incoming_students, threshold=2.0, std= local_std)
-  str_outlier: list[str] = outlier_calculator.outliers_to_str(incoming_students, incoming_outliers)
-  logging.warning("Outliers found in incoming students using a threshold of %i and a STD of %s", 2.0, local_std)
-  for i in str_outlier:
-    #print in red color
-    print(f"\033[91m{i}\033[00m")
+  incoming_outliers = outlier_calculator.calculate_outliers(incoming_students, threshold=threshold, std= local_std)
 
-  # convert categories to numerical values
+  logging.info("Outliers calculated")
+  are_outliers: bool = any(incoming_outliers)
+
+  if are_outliers:
+    logging.warning("Outliers found in incoming students using a threshold of %i and a STD of %s", threshold, local_std)
+    str_outlier = outlier_calculator.outliers_to_str(incoming_students, incoming_outliers)
+    for i in str_outlier:
+      #print in red color
+      print(f"\033[91m{i}\033[00m")
+
+      #remove outliers
+    incoming_students = outlier_calculator.remove_outliers(incoming_students, incoming_outliers)
+    logging.warning("Outliers removed from incoming students, manual intervention may be required.")
+
+  else:
+    logging.info("No outliers found in incoming students using a threshold of %i and a STD of %s", threshold, local_std)
+
+
+    #print in red colo  # convert categories to numerical values
   local_students, incoming_students = data_handler.convert_categories_to_numerical(local_students, incoming_students, hobbies)
 
   #adjust dates
@@ -106,10 +125,18 @@ def main():
 
   # calulate capacities of the local students and number of  incoming students
   base_local_capacity: int  = data_handler.get_base_capacities(local_students)
-  base_incoming_necessity: int = data_handler.get_base_necessity(incoming_students)
+  base_incoming_necessity: int = data_handler.get_base_necessity(incoming_students) + 5
 
-  print(f"Base local capacity: {base_local_capacity}")
-  print(f"Base incoming: {base_incoming_necessity}")
+
+  logging.info("Base capacities and necessities calculated")
+
+  logging.info("base local capacity: %s", base_local_capacity)
+  logging.info("base incoming necessity: %s", base_incoming_necessity)
+
+  if base_local_capacity < base_incoming_necessity:
+    logging.warning("The base local capacity is less than the base incoming necessity")
+    logging.warning("The algorithm may not be able to match all incoming students")
+
 
 
   # compute the bounds for the different categories

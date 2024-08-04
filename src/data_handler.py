@@ -17,46 +17,6 @@ def create_deny_list() -> pd.DataFrame:
     return deny_list
 
 
-def clean_data(local_students: pd.DataFrame, incoming_students: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Cleans the data for local and incoming students DataFrames.
-
-    This function performs the following operations:
-    1. Replaces double single quotes with double quotes in column names.
-    2. Strips leading and trailing whitespace from column names.
-    3. Converts specific date columns to datetime objects and extracts the date.
-
-    Args:
-        local_students (pd.DataFrame): DataFrame containing local students' data.
-        incoming_students (pd.DataFrame): DataFrame containing incoming students' data.
-
-    Returns:
-        Tuple[pd.DataFrame, pd.DataFrame]: A tuple containing the cleaned DataFrames for local and incoming students.
-    """
-    local_students = local_students.copy()
-    incoming_students = incoming_students.copy()
-
-
-    # Clean column names by replacing double single quotes with double quotes and stripping whitespace
-    local_students.columns = local_students.columns.str.replace("''", '"').str.strip()
-    incoming_students.columns = incoming_students.columns.str.replace("''", '"').str.strip()
-
-    # Convert date columns to datetime objects and extract the date
-    local_students[
-        'From approximately which date are you available to physically meet your buddy match?'] = pd.to_datetime(
-        local_students['From approximately which date are you available to physically meet your buddy match?'], errors='coerce', format='%d/%m/%Y').dt.date
-    local_students[
-        'From approximately which date are you available to answer questions from your buddy match? (through mail, phone, whatsapp etc.)'] = pd.to_datetime(
-        local_students[
-            'From approximately which date are you available to answer questions from your buddy match? (through mail, phone, whatsapp etc.)'],
-        errors='coerce', format='%d/%m/%Y').dt.date
-
-    incoming_students['When will you arrive in Groningen (approximately)?'] = pd.to_datetime(
-        incoming_students['When will you arrive in Groningen (approximately)?'], errors='coerce', format='%d-%m-%Y').dt.date
-
-    return local_students, incoming_students
-
-
 
 def rename_timestamps(local_students: pd.DataFrame, incoming_students: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
@@ -158,7 +118,6 @@ def generate_cleaned_dataframes(
 
 def read_column_mapping(filename: str) -> Dict[str,str]:
     """Reads the column mapping from the configuration file.
-
     Returns:
         Dict[str,str]: Dictionary containing the mapping of old column names to new column names.
     """

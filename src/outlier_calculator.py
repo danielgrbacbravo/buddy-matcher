@@ -15,14 +15,21 @@ def calculate_outliers(data: pd.DataFrame, threshold: float = 2.0, std: float = 
     Returns:
         pd.Series: Boolean series indicating whether each data point is an outlier.
     """
-    colorlog.debug("calculating outliers")
     # Extract age data from the DataFrame
     age_data: pd.Series = pd.Series(data['Age'].values)
     mean_data = age_data.mean()
     z_scores = (age_data - mean_data) / std
-    outliers = (z_scores < -threshold) | (z_scores > threshold)
+    outliers: pd.Series = (z_scores < -threshold) | (z_scores > threshold)
 
     return outliers
+
+
+def remove_outliers(data: pd.DataFrame, outliers: pd.Series) -> pd.DataFrame:
+  for index, value in outliers.items():
+      if value:
+          data.drop(index, inplace=True)
+  return data
+
 
 def outliers_to_str(data: pd.DataFrame, outliers: pd.Series) -> list[str]:
     """returns array of strings of the names of outliers"""
