@@ -39,6 +39,7 @@ def compute_optimal_pairs(distance_matrix: pd.DataFrame, local_students: pd.Data
 
     for i in range(highest_capacity):
         # Remove local students who do not have enough capacity for i matches
+        # TODO: issue with the indexes because of drops prior to this
         for index, row in local_students.iterrows():
             if row['Capacity'] < i:
                 distance_matrix = distance_matrix.drop(index)
