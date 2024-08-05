@@ -19,6 +19,8 @@ import student_filter
 import normalization_calculator
 import outlier_calculator
 import formatter
+import student_matcher
+from tqdm import tqdm
 
 def main():
 
@@ -155,7 +157,15 @@ def main():
   for key, value in normal_dict.items():
     logging.info("value for %s: %s", key, value)
 
-  distance_calculator.caculate_student_distances(local_students, incoming_students,config, normal_dict, faculty_distances,hobbies)
+  distance_matrix: pd.DataFrame = distance_calculator.caculate_student_distances(local_students, incoming_students,config, normal_dict, faculty_distances,hobbies)
+  logging.info("Distance matrix computed")
+
+  logging.info("beggining the Kuhn-Munkres algorithm for building the matching matrix")
+  matching_matrix: pd.DataFrame = student_matcher.compute_optimal_pairs(distance_matrix, local_students, incoming_students, base_local_capacity, base_incoming_necessity)
+
+
+  print(matching_matrix)
+
 
 if __name__ == '__main__':
   main()

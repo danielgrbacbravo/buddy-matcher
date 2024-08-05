@@ -5,6 +5,7 @@ import math
 import  numpy as np
 import colorlog as logging
 from munkres import Munkres, DISALLOWED
+from tqdm import tqdm
 
 def calculate_age_distance(
   config: configparser.ConfigParser,
