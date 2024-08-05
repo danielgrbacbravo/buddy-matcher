@@ -20,8 +20,7 @@ import normalization_calculator
 import outlier_calculator
 import formatter
 import student_matcher
-from tqdm import tqdm
-
+import report
 def main():
 
   logging.basicConfig(level=logging.INFO)
@@ -178,8 +177,11 @@ def main():
     logging.info("beggining the Kuhn-Munkres algorithm for building the matching matrix")
     matching_matrix: pd.DataFrame = student_matcher.compute_optimal_pairs(distance_matrix, local_students_no_outliers, incoming_students_no_outliers, base_local_capacity, base_incoming_necessity)
 
-
     print(matching_matrix)
+
+    output = report.convert_matching_matrix_to_output(matching_matrix,distance_matrix, local_students_no_outliers, incoming_students_no_outliers)
+    print(output)
+
 
 
   else:
@@ -232,11 +234,17 @@ def main():
   hobbies)
 
   logging.info("Distance matrix computed")
+  print(distance_matrix)
+
+
 
   logging.info("beggining the Kuhn-Munkres algorithm for building the matching matrix")
   matching_matrix: pd.DataFrame = student_matcher.compute_optimal_pairs(distance_matrix, local_students, incoming_students, base_local_capacity, base_incoming_necessity)
 
   print(matching_matrix)
+
+  output = report.convert_matching_matrix_to_output(matching_matrix,distance_matrix, local_students, incoming_students)
+  print(output)
 
 
 
