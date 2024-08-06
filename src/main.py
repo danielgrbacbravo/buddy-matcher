@@ -30,7 +30,7 @@ def main():
   print(custom_fig.renderText('ESN Buddy Matcher'))
 
 
-  output_dir: str = 'output/run_final_matching_algorithm_' + datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+  output_dir: str = 'output'
 
   # Check if the input files exist
   if not os.path.exists("input/local_students.csv"):
@@ -179,9 +179,15 @@ def main():
 
     print(matching_matrix)
 
-    output = report.convert_matching_matrix_to_output(matching_matrix,distance_matrix, local_students_no_outliers, incoming_students_no_outliers)
-    print(output)
+    logging.info("Matching matrix computed")
 
+    # create the output dir
+    os.makedirs(output_dir, exist_ok=True)
+    # create the output file name
+    file_name = f"matching_report_no_outliers{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv"
+    output_file_name = os.path.join(output_dir, file_name)
+
+    report.create_report(matching_matrix, distance_matrix, local_students_no_outliers, incoming_students_no_outliers,  output_file_name)
 
 
   else:
@@ -243,9 +249,13 @@ def main():
 
   print(matching_matrix)
 
-  output = report.convert_matching_matrix_to_output(matching_matrix,distance_matrix, local_students, incoming_students)
-  print(output)
+  # create the output dir
+  os.makedirs(output_dir, exist_ok=True)
+  # create the output file name
+  file_name = f"matching_report_with_outliers{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv"
+  output_file_name = os.path.join(output_dir, file_name)
 
+  report.create_report(matching_matrix, distance_matrix, local_students, incoming_students,  output_file_name)
 
 
 if __name__ == '__main__':
