@@ -180,7 +180,6 @@ def main():
     print(matching_matrix)
 
     logging.info("Matching matrix computed")
-
     # create the output dir
     os.makedirs(output_dir, exist_ok=True)
     # create the output file name
