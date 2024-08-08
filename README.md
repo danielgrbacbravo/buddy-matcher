@@ -6,8 +6,13 @@ This project is a student pair-matching system aimed at matching local students 
 
 ## Installation and Run Script
 
-in a mac or linux terminal run:
 
+1. Clone the project to your local system. You can clone using the command below:
+```git
+git clone <Repository-URL>
+cd path-to-folder
+```
+2. Run the bash shell script `run.sh` on your terminal. This script will install necessary dependencies and execute the main Python script. Use the command:
 ```bash
 ./run.sh
 ```
