@@ -1,10 +1,20 @@
-# ESN Buddy Matcher: ReadMe
+# ESN Buddy Matcher
 
 ## Introduction
 
 This project is a student pair-matching system aimed at matching local students with incoming international students based on their common interests, courses, and faculties. This can be used by higher institutions for an effective buddy system where international students are paired with a local student of the same interest. 
 
-## Installation and Setup
+## Installation and Setup Script
+
+in a mac or linux terminal run:
+
+```bash
+./run.sh
+```
+
+this script will attempt to install all the required dependencies and libaries and set up the python virtual environment. once completed it will run the python program however it requires the correct input files to function, please read "how to use" for further instruction 
+
+## Manual Installation and Setup
 
 1. Ensure you have `python3` installed on your system. If not, you can download and install python from [here](https://www.python.org/downloads/).
 
@@ -26,6 +36,8 @@ python3 -m venv .venv
 ```pip
 pip install -r requirements.txt
 ```
+
+
 ## How to Use
 
 1. Once the above steps are done, run the bash shell script `run_script.sh` on your terminal. This script will install necessary dependencies and execute the main Python script. Use the command:
