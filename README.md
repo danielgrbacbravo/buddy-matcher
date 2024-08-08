@@ -17,8 +17,6 @@ cd path-to-folder
 ./run.sh
 ```
 
-this script attempts to install all the required dependencies and libaries and set up the python virtual environment. once completed it will run the python program however it requires the correct input files to function, please read "how to use" for further instruction
-
 ## Manual Installation and Setup
 
 1. Ensure you have `python3` installed on your system. If not, you can download and install python from [here](https://www.python.org/downloads/).
@@ -45,10 +43,16 @@ pip install -r requirements.txt
 
 ## How to Use
 
-1. Once the above steps are done, run the bash shell script `run_script.sh` on your terminal. This script will install necessary dependencies and execute the main Python script. Use the command:
+1. Once the above steps are done, run the bash shell script `run.sh` on your terminal. This script will install necessary dependencies and execute the main Python script. Use the command:
 ```bash
 ./run.sh
 ```
+
+2. if you prefer to run the script manually, you can run the following command:
+```bash
+python3 src/main.py
+```
+
 2. The script will process the data from incoming and local students from the `input` folder. It will use hobbies from the `config/hobbies.csv` and faculty distances from `config/faculty_distances.xlsx`.
 
 3. All results will be output to the `output` folder. If outliers are detected, two separate reports will be generated: a buddy pair report ignoring outliers, and one including outliers. If there are no outliers, only one report is generated.
