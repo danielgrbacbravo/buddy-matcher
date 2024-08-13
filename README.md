@@ -65,7 +65,7 @@ python3 src/main.py
 
 - The `config/faculty_distances.xlsx` file contains distances between faculties at the school setting. This information helps delivering a more refined match-making results.
 
-- The `config/local_students_column_renames.csv` and `config/incoming_students_column_renames.csv` help map the input column names to a standard form, facilitating data processing.
+- The `config/local_students_column_renames.csv` and `config/incoming_students_column_renames.csv` help map the input column names to a standard form, facilitating data processing. practically speaking, they map one set of header names to another so that they match for processing
 
 ## Output details
 
