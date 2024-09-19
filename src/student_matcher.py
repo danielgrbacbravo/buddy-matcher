@@ -26,6 +26,7 @@ def compute_optimal_pairs(distance_matrix: pd.DataFrame, local_students: pd.Data
     - pd.DataFrame: A DataFrame indicating the matching between local and incoming students, where 1 indicates a match.
     """
 
+    print(distance_matrix)
     local_students = local_students.copy()
     incoming_students = incoming_students.copy()
 
@@ -48,6 +49,7 @@ def compute_optimal_pairs(distance_matrix: pd.DataFrame, local_students: pd.Data
 
         # Filter distance_matrix to exclude matched incoming students
         distance_matrix_filtered = distance_matrix.loc[:, ~distance_matrix.columns.isin(matched_incoming_students)]
+        print(distance_matrix_filtered)
 
         # Only proceed if there are local students and incoming students to match
         if not local_students.empty and not distance_matrix_filtered.empty:

@@ -80,6 +80,10 @@ def main():
   # Convert all date columns to datetime objects
   local_students, incoming_students = formatter.convert_all_dates_to_datetime(local_students, incoming_students)
 
+
+
+
+
   logging.info("Dates converted to datetime objects successfully")
 
   local_students, incoming_students = formatter.rename_timestamps(local_students, incoming_students)
@@ -115,21 +119,28 @@ def main():
     logging.warning("Outliers found in incoming students using a threshold of %i and a STD of %s", threshold, local_std)
     str_outlier = outlier_calculator.outliers_to_str(incoming_students, incoming_outliers)
     for i in str_outlier:
-      #print in red color
-      print(f"\033[91m{i}\033[00m")
+       #print in red color
+       print(f"\033[91m{i}\033[00m")
+    logging.info("Outliers printed")
+
+    logging.info("running the program without the outliers")
+
 
     # create dulicate copies of the incoming and local students
     local_students_no_outliers: pd.DataFrame= local_students.copy()
     incoming_students_no_outliers: pd.DataFrame = incoming_students.copy()
+    logging.info("Copies of incoming and local students created")
 
-      #remove outliers
+    #remove outliers
     incoming_students_no_outliers = outlier_calculator.remove_outliers(
       incoming_students_no_outliers
       , incoming_outliers)
 
-    logging.warning("Outliers removed from incoming students, manual intervention may be required.")
+    # Fix the indexes after removing people
+    incoming_students_no_outliers.reset_index(drop=True, inplace=True)
+    logging.info("Outliers removed from incoming students")
 
-       #print in red colo  # convert categories to numerical values
+    # convert categories to numerical values
     local_students_no_outliers, incoming_students_no_outliers= formatter.convert_categories_to_numerical(
     local_students_no_outliers,
     incoming_students_no_outliers,
@@ -160,9 +171,9 @@ def main():
       faculty_distances)
     logging.info("Normalization values computed")
 
-
     for key, value in normal_dict.items():
       logging.info("value for %s: %s", key, value)
+
 
     distance_matrix: pd.DataFrame = distance_calculator.caculate_student_distances(
     local_students_no_outliers,
@@ -193,9 +204,10 @@ def main():
     logging.info("No outliers found in incoming students using a threshold of %i and a STD of %s", threshold, local_std)
 
 
-  logging.info("computing matrix with outliers as well")
+  logging.info("running the program without the outliers")
 
-      #print in red colo  # convert categories to numerical values
+
+  # convert categories to numerical values
   local_students, incoming_students = formatter.convert_categories_to_numerical(
   local_students,
   incoming_students,
@@ -239,14 +251,11 @@ def main():
   hobbies)
 
   logging.info("Distance matrix computed")
-  print(distance_matrix)
-
 
 
   logging.info("beggining the Kuhn-Munkres algorithm for building the matching matrix")
   matching_matrix: pd.DataFrame = student_matcher.compute_optimal_pairs(distance_matrix, local_students, incoming_students, base_local_capacity, base_incoming_necessity)
 
-  print(matching_matrix)
 
   # create the output dir
   os.makedirs(output_dir, exist_ok=True)

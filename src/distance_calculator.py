@@ -6,37 +6,22 @@ import  numpy as np
 import colorlog as logging
 from munkres import Munkres, DISALLOWED
 
+
+def sigmoid(x: float) -> float:
+    return 1 / (1 + math.exp(-x))
+
 def calculate_age_distance(
   config: configparser.ConfigParser,
-  age_range: int,
   local_students: pd.Series,
   incoming_student: pd.Series) -> float:
-    """Calculate the age distance between a local student and an incoming student.
 
-    This function computes the absolute difference in ages between the two students,
-    adjusts it based on a desired age difference from the configuration, and scales
-    the result using the factorial of the age difference and the provided age range.
-
-    :param config: A ConfigParser object containing configuration parameters, including the desired age difference.
-    :param age_range: An integer representing the range of ages used for scaling the distance.
-    :param local_students: A pandas Series representing the local student's attributes, including their age.
-    :param incoming_student: A pandas Series representing the incoming student's attributes, including their age.
-    :return: A float representing the scaled distance between the ages of the two students.
-    """
     local_age = local_students['Age']
     incoming_age = incoming_student['Age']
 
     age_difference = abs(int(local_age) - int(incoming_age))
+    optimal_age_difference = int(config.get('parameters', 'desired_age_difference'))
 
-    age_difference -= int(config.get('parameters', 'desired_age_difference'))
-
-    # Scale age difference using factorial
-    age_difference_distance = math.factorial(age_difference) if age_difference > 0 else 0
-
-    # age_difference_distance /= (math.factorial(self.age_range) * age_multiplier)
-    age_difference_distance = float(age_difference_distance / (math.factorial(age_range)))
-
-    return age_difference_distance
+    return sigmoid(age_difference/optimal_age_difference)
 
 
 def calculate_gender_distance(
@@ -44,20 +29,10 @@ def calculate_gender_distance(
   gender_range: int,
   local_students: pd.Series,
   incoming_students: pd.Series) -> float:
-    """Function to calculate the distance between the gender preferences of local and incoming students.
-
-    This function evaluates the gender preferences of both local and incoming students and calculates a
-    distance metric based on any penalties associated with mismatched preferences. The distance is scaled
-    by the provided gender_range.
-
-    :param config: A ConfigParser object containing configuration parameters including gender preference penalties.
-    :param gender_range: An integer representing the range of gender preferences used for scaling the distance.
-    :param local_students: A pandas Series representing the local student's attributes, including their gender preference.
-    :param incoming_students: A pandas Series representing the incoming student's attributes, including their gender preference.
-    :return: A float representing the calculated distance based on gender preferences.
-    """
-
     distance: float = 0
+
+
+
     local_gender_preference_penalty = int(config.get('parameters', 'local_gender_preference_penalty'))
     incoming_gender_preference_penalty = int(config.get('parameters', 'incoming_gender_preference_penalty'))
 
@@ -70,7 +45,7 @@ def calculate_gender_distance(
         distance += incoming_gender_preference_penalty
 
     distance = float(distance / gender_range)
-
+    print(f'gender distance -> : {distance}')
     return distance
 
 
@@ -214,6 +189,10 @@ def calculate_text_availability_distance(
   local_student_text_date = pd.to_datetime(local_student['AvailabilityText'])
   incoming_student_arrival_date = pd.to_datetime(incoming_student['Arrival'])
 
+
+  print(local_student_text_date)
+  print(incoming_student_arrival_date)
+
   ideal_difference = float(config.get('parameters', 'desired_date_difference'))
 
   if (incoming_student_arrival_date - local_student_text_date).days >= ideal_difference:
@@ -287,27 +266,61 @@ def calculate_student_distance(
   ) -> float:
 
   distance: float = 0.0
-
   # age distance between a local student and an incoming student
-  age_distance: float = calculate_age_distance(config, normal_dict['age_range'],local_student, incoming_student)
+  age_distance: float = calculate_age_distance(config,local_student, incoming_student)
+  if pd.isnull(age_distance):
+        age_distance = 0.5
+
+
   # distance between the gender preferences of local and incoming students.
   gender_distance: float = calculate_gender_distance(config, normal_dict['gender_range'] , local_student, incoming_student)
+  if pd.isnull(gender_distance):
+      gender_distance = 0.5
+
+
   # If the genders are different and the absolute age difference exceeds the desired age difference specified in the configuration
   gender_age_distance: float = calculate_age_gender_distance(config, normal_dict['age_range'], local_student , incoming_student)
-  # the distance between the universities of two students.
+  if pd.isnull(gender_age_distance):
+      gender_age_distance = 0.5
+
+   # the distance between the universities of two students.
   university_distance: float = calculate_university_distance(local_student, incoming_student)
+  if pd.isnull(university_distance):
+      university_distance = 0.5
+
   # distance between the faculties of a local student and an incoming student
   faculty_distance: float = calculate_faculty_distance(local_student, incoming_student, faculty_distances)
+  if pd.isnull(faculty_distance):
+        faculty_distance = 0.5
+
   # distance based on the personal interests (hobbies) of local and incoming students
   interest_distance: float = calculate_personal_interests_distance(config,local_student, incoming_student, normal_dict['hobby_range'],hobbies)
+  if pd.isnull(interest_distance):
+        interest_distance = 0.5
+
+
   # distance based on the availability dates of local and incoming students
   availability_distance = calculate_availability_distance(local_student, incoming_student, normal_dict['date_range'])
+  if pd.isnull(availability_distance):
+        availability_distance = 0.5
+
+
   # distance based on the text availability dates of local and incoming students
   text_availability_distance = calculate_text_availability_distance(config, local_student, incoming_student)
+  if pd.isnull(text_availability_distance):
+        text_availability_distance = 0.5
+
+
   # distance based on the meeting frequency preferences of local and incoming students
   meeting_frequency_distance = calculate_meeting_frequency_distance(local_student, incoming_student, normal_dict['meeting_frequency_range'])
+  if pd.isnull(meeting_frequency_distance):
+        meeting_frequency_distance = 0.5
+
+
   # distance based on the expectations of local and incoming students
   expectation_distance = calculate_expectation_distance(local_student, incoming_student)
+  if pd.isnull(expectation_distance):
+      expectation_distance = 0.5
 
   # Get all factors
   age_factor = float(config.get('normalization', 'age_factor'))
@@ -323,7 +336,7 @@ def calculate_student_distance(
 
   # Calculate the total distance
   distance += (age_factor * age_distance)
-  distance += (gender_factor * gender_distance)
+  distance += (float)(gender_factor * gender_distance)
   distance += (age_gender_factor * gender_age_distance)
   distance += (university_factor * university_distance)
   distance += (faculty_factor * faculty_distance)
@@ -332,6 +345,24 @@ def calculate_student_distance(
   distance += (availability_text_factor * text_availability_distance)
   distance += (meeting_frequency_factor * meeting_frequency_distance)
   distance += (expectation_factor * expectation_distance)
+
+
+  if pd.isnull(distance):
+      logging.warning("NaN distance found!")
+      print(f'Issue With Calculating Distances between {local_student['FirstName']} and {incoming_student['FirstName']}')
+      print("---distances calculated---")
+      print(f'Age Distance: {age_distance}')
+      print(f'gender Distance: {gender_distance}')
+      print(f'gender_age Distance: {gender_age_distance}')
+      print(f'university Distance: {university_factor}')
+      print(f'faculty Distance: {faculty_distance}')
+      print(f'interests Distance: {interest_distance}')
+      print(f'availability Distance: {availability_distance}')
+      print(f'text_availability Distance: {text_availability_distance}')
+      print(f'meeting_frequency Distance: {meeting_frequency_distance}')
+      print(f'expectation Distance: {expectation_distance}')
+
+
 
   return distance
 
@@ -348,20 +379,35 @@ def caculate_student_distances(
   # Create a DataFrame to store the distances between all local and incoming students
   distances = pd.DataFrame(index=range(len(local_students)), columns=range(len(incoming_students)))
 
+
+  # for each local student, calculate the distance between them and each incoming student
   for local_student_index in range(len(local_students)):
+
 
     local_student_name = local_students.iloc[local_student_index]['FirstName']
     logging.info(f'Calculating distances for {local_student_name} between incoming students')
 
+
+    if local_student_index == 1:
+        for incoming_student_index in range(len(incoming_students)):
+                distance = calculate_student_distance(
+                local_students.iloc[local_student_index],
+                incoming_students.iloc[incoming_student_index],
+                config,
+                normal_dict,
+                faculty_distances,
+                hobbies)
+                distances.loc[local_student_index, incoming_student_index] = distance
+                print(distance)
+
+    # for each incoming student, calculate the distance between them and the local student
     for incoming_student_index in range(len(incoming_students)):
-      distance = calculate_student_distance(
+        distance = calculate_student_distance(
         local_students.iloc[local_student_index],
         incoming_students.iloc[incoming_student_index],
         config,
         normal_dict,
         faculty_distances,
         hobbies)
-      distances.loc[local_student_index, incoming_student_index] = distance
-
-
+        distances.loc[local_student_index, incoming_student_index] = distance
   return distances

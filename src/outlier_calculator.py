@@ -23,18 +23,29 @@ def calculate_outliers(data: pd.DataFrame, threshold: float = 2.0, std: float = 
 
     return outliers
 
+def remove_outliers(data: pd.DataFrame, outliers: pd.Series | np.ndarray) -> pd.DataFrame:
+    # Convert Series to ndarray if necessary
+    if isinstance(outliers, pd.Series):
+        outliers = outliers.to_numpy()
 
-def remove_outliers(data: pd.DataFrame, outliers: pd.Series) -> pd.DataFrame:
-  for index, value in outliers.items():
-      if value:
-          data.drop(index, inplace=True)
-  return data
+    # Ensure that 'outliers' is a boolean mask of the same length as the data
+    if len(outliers) != len(data):
+        raise ValueError("Length of 'outliers' must match the number of rows in 'data'.")
+
+    # Use 'loc' to ensure the result is a DataFrame
+    return data.loc[~outliers]
+
 
 
 def outliers_to_str(data: pd.DataFrame, outliers: pd.Series) -> list[str]:
     """returns array of strings of the names of outliers"""
-    outliars = []
+    outlier_names: list[str] = []
+
     for index, value in outliers.items():
         if value:
-            outliars.append(data['FirstName'][index] + " " + data['LastName'][index])
-    return outliars
+            first_name = data.iloc[index]['FirstName']
+            last_name = data.iloc[index]['LastName']
+            age = data.iloc[index]['Age']
+            outlier_names.append(f"{first_name} {last_name}  ({age} years)")
+
+    return outlier_names
