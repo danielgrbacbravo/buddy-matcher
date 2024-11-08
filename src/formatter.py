@@ -92,22 +92,22 @@ def drop_irrelevant_columns(local_students: pd.DataFrame,
 
   if faculty_distances is None:
     try:
-      faculty_distances = pd.read_excel('config/faculty_distances.xlsx')
+      faculty_distances = pd.read_excel('/data/config/faculty_distances.xlsx')
     except FileNotFoundError as e:
       print('Faculty distances file not found. Please run the configuration script first.')
       raise e
 
   if local_students_irrelevant_columns is None:
     try:
-      local_students_irrelevant_columns = pd.read_csv(r'config/local_students_irrelevant_columns.csv',
-                                                    quotechar="'")
+      local_students_irrelevant_columns = pd.read_csv(r'/data/config/local_students_irrelevant_columns.csv',
+                                                        quotechar="'")
     except FileNotFoundError as e:
       print('Local students irrelevant columns file not found. Please run the configuration script first.')
       raise e
 
   if incoming_students_irrelevant_columns is None:
     try:
-      incoming_students_irrelevant_columns = pd.read_csv(r'config/incoming_students_irrelevant_columns.csv',
+      incoming_students_irrelevant_columns = pd.read_csv(r'/data/config/incoming_students_irrelevant_columns.csv',
                                                       quotechar="'")
     except FileNotFoundError as e:
       print('Incoming students irrelevant columns file not found. Please run the configuration script first.')

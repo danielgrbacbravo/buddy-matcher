@@ -21,7 +21,8 @@ import outlier_calculator
 import formatter
 import student_matcher
 import report
-def main():
+
+def min():
 
   logging.basicConfig(level=logging.INFO)
 
@@ -29,25 +30,28 @@ def main():
   custom_fig = pyfiglet.Figlet(font='standard')
   print(custom_fig.renderText('ESN Buddy Matcher'))
 
-
-  output_dir: str = 'output'
+  output_dir: str = '/data/output'
 
   # Check if the input files exist
-  if not os.path.exists("input/local_students.csv"):
+  if not os.path.exists("/data/input/local_students.csv"):
       raise FileNotFoundError(f"Local students file not found in the input folder.")
 
-  if not os.path.exists("input/incoming_students.csv"):
+  logging.info("Local students file found")
+
+  if not os.path.exists("/data/input/incoming_students.csv"):
       raise FileNotFoundError(f"Incoming students file not found in the input folder.")
 
+  logging.info("Incoming students file found")
+
   # Load the data
-  local_students: pd.DataFrame = pd.read_csv("input/local_students.csv")
+  local_students: pd.DataFrame = pd.read_csv("/data/input/local_students.csv")
   logging.info("Local students loaded [%s]", local_students.shape)
 
-  incoming_students: pd.DataFrame = pd.read_csv("input/incoming_students.csv")
+  incoming_students: pd.DataFrame = pd.read_csv("/data/input/incoming_students.csv")
   logging.info("Incoming students loaded [%s]", incoming_students.shape)
 
   try:
-        hobbies: pd.DataFrame = pd.read_csv("config/hobbies.csv", quotechar="'").iloc[:, 0].tolist()
+        hobbies: pd.DataFrame = pd.read_csv("/data/config/hobbies.csv", quotechar="'").iloc[:, 0].tolist()
         logging.info("Hobbies loaded")
 
   except FileNotFoundError as e:
@@ -55,7 +59,7 @@ def main():
           exit()
 
   try:
-      faculty_distances: pd.DataFrame = pd.read_excel(r'config/faculty_distances.xlsx', index_col=0)
+      faculty_distances: pd.DataFrame = pd.read_excel(r'/data/config/faculty_distances.xlsx', index_col=0)
   except FileNotFoundError as e:
       print(f"Error reading faculty distances file: {e}\nEnsure there is a faculty_distances.xlsx file in the ")
       exit()
@@ -70,10 +74,10 @@ def main():
   logging.info("Columns cleaned")
 
     # Remap the columns in the dataframes for consistency
-  column_mapping: Dict[str, str] = formatter.read_column_mapping("config/local_students_column_renames.csv")
+  column_mapping: Dict[str, str] = formatter.read_column_mapping("/data/config/local_students_column_renames.csv")
   local_students = formatter.remap_columns(column_mapping,local_students)
 
-  column_mapping = formatter.read_column_mapping("config/incoming_students_column_renames.csv")
+  column_mapping = formatter.read_column_mapping("/data/config/incoming_students_column_renames.csv")
   incoming_students = formatter.remap_columns(column_mapping,incoming_students)
   logging.info("Columns remapped successfully")
 
@@ -160,7 +164,7 @@ def main():
       logging.warning("The algorithm may not be able to match all incoming students")
 
 
-     # compute the bounds for the different categories
+    # compute the bounds for the different categories
     config = configparser.ConfigParser()
     config.read("config/config.ini")
     normal_dict: Dict[str, Union[float,int]] = normalization_calculator.compute_normalization_values(
@@ -229,7 +233,7 @@ def main():
 
     # compute the bounds for the different categories
   config = configparser.ConfigParser()
-  config.read("config/config.ini")
+  config.read("/data/config/config.ini")
   normal_dict: Dict[str, Union[float,int]] = normalization_calculator.compute_normalization_values(
     local_students,
     incoming_students,

@@ -347,22 +347,6 @@ def calculate_student_distance(
   distance += (expectation_factor * expectation_distance)
 
 
-  if pd.isnull(distance):
-      logging.warning("NaN distance found!")
-      print(f'Issue With Calculating Distances between {local_student['FirstName']} and {incoming_student['FirstName']}')
-      print("---distances calculated---")
-      print(f'Age Distance: {age_distance}')
-      print(f'gender Distance: {gender_distance}')
-      print(f'gender_age Distance: {gender_age_distance}')
-      print(f'university Distance: {university_factor}')
-      print(f'faculty Distance: {faculty_distance}')
-      print(f'interests Distance: {interest_distance}')
-      print(f'availability Distance: {availability_distance}')
-      print(f'text_availability Distance: {text_availability_distance}')
-      print(f'meeting_frequency Distance: {meeting_frequency_distance}')
-      print(f'expectation Distance: {expectation_distance}')
-
-
 
   return distance
 

@@ -6,10 +6,18 @@ WORKDIR /app
 
 # Copy your script and requirements
 COPY requirements.txt ./
-COPY src/ ./src/
+
+
+RUN mkdir -p /data
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Set the command to run your Python script
-CMD ["python", "src/main.py"]
+COPY src/  ./src/
+
+# Make entrypoint script executable
+COPY entrypoint.sh  /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+# Set the entrypoint and command
+ENTRYPOINT ["/app/entrypoint.sh"]

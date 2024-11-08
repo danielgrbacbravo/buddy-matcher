@@ -1,0 +1,6 @@
+services:
+  buddy-matcher:
+    image: daiigr/buddy-matcher:latest
+    container_name: buddy-matcher
+    volumes:
+      - ./data:/data
