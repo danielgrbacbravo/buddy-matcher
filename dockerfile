@@ -14,6 +14,7 @@ RUN mkdir -p /data
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src/  ./src/
+COPY config/ ./config/
 
 # Make entrypoint script executable
 COPY entrypoint.sh  /app/entrypoint.sh

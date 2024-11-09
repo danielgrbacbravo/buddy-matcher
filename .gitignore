@@ -28,7 +28,7 @@ MANIFEST
 
 
 # Docker Folders
-inputs/
+input/
 output/
 
 # PyInstaller

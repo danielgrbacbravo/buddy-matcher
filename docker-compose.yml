@@ -3,4 +3,6 @@ services:
     image: daiigr/buddy-matcher:latest
     container_name: buddy-matcher
     volumes:
-      - ./data:/data
+      - ./config:/config
+      - ./input:/input
+      - ./output:/output
