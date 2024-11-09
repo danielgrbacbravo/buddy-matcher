@@ -8,13 +8,14 @@ WORKDIR /app
 COPY requirements.txt ./
 
 
-RUN mkdir -p /data
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src/  ./src/
-COPY config/ ./config/
+COPY ./config/ /default-config/
+RUN ls -la /default-config
+
 
 # Make entrypoint script executable
 COPY entrypoint.sh  /app/entrypoint.sh
