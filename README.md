@@ -4,6 +4,66 @@
 
 This project is a student pair-matching system aimed at matching local students with incoming international students based on their common interests, courses, and faculties. This can be used by higher institutions for an effective buddy system where international students are paired with a local student of the same interest.
 
+
+
+
+
+
+## Usage
+the best way to use this project is though a docker container as it will ensure that all dependencies are installed and the script is run in a controlled environment. To use the docker container, follow the steps below:
+
+1. Create a directory on your local machine where you want to store the project files. You can do this by running the command below:
+```bash
+mkdir esn-buddy-matcher
+cd esn-buddy-matcher
+```
+
+2. Create a docker-compose.yml file in the directory you created above. You can do this by running the command below:
+```bash
+touch docker-compose.yml
+```
+
+3. Open the docker-compose.yml file in a text editor and add the following content:
+```yaml
+services:
+  buddy-matcher:
+    image: daiigr/buddy-matcher:latest
+    container_name: buddy-matcher
+    volumes:
+      - ./config:/config
+      - ./input:/input
+      - ./output:/output
+```
+
+4. run the following command to start the docker container:
+```bash
+docker compose up
+```
+
+5. the first time you run the container, the necessary directories will be created in the `config`, `input`, and `output` directories. You can then add the necessary files to the `input` and `config` directories
+once the files are added, you can start the docker container again by running the command below:
+```bash
+docker compose up
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## Installation and Run Script
 
 
