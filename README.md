@@ -1,5 +1,7 @@
 # ESN Buddy Matcher
 
+### this has been moved to (https://github.com/ESN-Buddy-Program/buddy-matcher)
+
 ## Introduction
 
 This project is a student pair-matching system aimed at matching local students with incoming international students based on their common interests, courses, and faculties. This can be used by higher institutions for an effective buddy system where international students are paired with a local student of the same interest.
