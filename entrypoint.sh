@@ -19,5 +19,6 @@ else
   echo "No default config files found in /default-config."
 fi
 
-
-exec python3 src/main.py "$@"
+# Check if local_students.csv and input.csv exist in /input
+[ -f "/input/local_students.csv" ] && [-f "/input/incoming_students.csv" ] && exec python3 src/main.py "$@" || \
+echo "local_students.csv and incoming_students.csv must be present in /input \n  run again once they are present." && exit 1
